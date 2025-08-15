@@ -11,3 +11,4 @@
 # Standardizing date formats (e.g., YYYY-MM-DD).
 # Correcting typos and inconsistent entries (e.g., "New York," "NY," and "NYC" should all be standardized to one format).
 # Correcting Inaccurate Data: Finding and fixing data that is logically incorrect. For example, a person's age cannot be 200, or a price cannot be a negative number. This often involves setting rules or using validation checks
+# do not include non ASCII? (depends on the language/data that you wanna target)
