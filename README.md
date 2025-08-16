@@ -1,12 +1,13 @@
 # SLM Pipeline
 
-This project provides a complete pipeline for building a Small Language Model (SLM) tailored to a specific domain. It covers data collection, processing, fine-tuning, and deployment.
+This project provides a complete pipeline for building a Small Language Model (SLM) tailored to a specific domain. It covers data collection, processing, fine-tuning, evaluation, and deployment.
 
 ## Features
 
 - **Data Collection:** Scrape websites and extract text from PDF documents.
 - **Data Processing:** Clean, chunk, and generate question-answer pairs from the collected data.
 - **Fine-Tuning:** Fine-tune a base model using the generated dataset.
+- **Evaluation:** Evaluate the fine-tuned model against a baseline using ROUGE and BLEU metrics, and measure performance.
 - **Deployment:** Deploy the fine-tuned model as a FastAPI application.
 
 ## Prerequisites
@@ -67,6 +68,22 @@ This will perform the following steps:
 4.  **Training:** Fine-tune the base model using the generated datasets.
 5.  **Deployment:** Start a FastAPI server to serve the fine-tuned model.
 
+## Evaluation
+
+To evaluate the fine-tuned model, run the `evaluate.py` script:
+
+```bash
+python eval/evaluate.py
+```
+
+This will:
+
+1.  Load the fine-tuned model and a baseline model.
+2.  Generate predictions on the test set.
+3.  Calculate ROUGE and BLEU scores.
+4.  Measure inference latency and throughput.
+5.  Print a comparison report.
+
 ## Deployment
 
 The `main.py` script automatically starts the deployment server. You can also run it manually:
@@ -92,4 +109,8 @@ The API will be available at `http://0.0.0.0:8000`.
   - `setup_dataset.py`: Prepares the dataset for training.
 - `training/`: Contains the model training scripts.
   - `train.py`: The main training script.
+- `eval/`: Contains scripts for model evaluation.
+  - `evaluate.py`: The main evaluation script.
+  - `metrics.py`: Calculates ROUGE and BLEU scores.
+  - `performance.py`: Measures inference latency and throughput.
 - `pyproject.toml`: Defines the project dependencies.
