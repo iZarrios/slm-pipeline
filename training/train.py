@@ -1,3 +1,4 @@
+import logging
 from textwrap import dedent
 from typing import Dict, Any
 
@@ -11,6 +12,9 @@ from transformers import (
     pipeline,
 )
 from trl import SFTConfig, SFTTrainer
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SEED = 42
 HF_TOKEN = ""
@@ -27,6 +31,7 @@ def train_model(base_model: str, output_dir: str, lora_rank: int):
         lora_rank (int): The rank of the LoRA matrices.
         max_seq_length (int): The maximum sequence length.
     """
+    logging.info(f"Starting model training with base model: {base_model}")
 
     def create_test_prompt(row: Dict[str, Any]):  # type: ignore
         prompt = dedent(
@@ -45,16 +50,19 @@ def train_model(base_model: str, output_dir: str, lora_rank: int):
             messages, tokenize=False, add_generation_prompt=True
         )
 
+    logging.info("Configuring quantization")
     quant_cfg = BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.bfloat16,
     )
 
+    logging.info(f"Loading tokenizer for base model: {base_model}")
     tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True, token=HF_TOKEN)
     tokenizer.add_special_tokens({"pad_token": PAD_TOKEN})
     tokenizer.padding_side = "right"
 
+    logging.info(f"Loading base model: {base_model}")
     model = AutoModelForCausalLM.from_pretrained(
         base_model,
         quantization_config=quant_cfg,
@@ -66,6 +74,7 @@ def train_model(base_model: str, output_dir: str, lora_rank: int):
 
     model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
 
+    logging.info("Loading dataset from JSON files")
     dataset = load_dataset(
         "json",
         data_files={
@@ -75,6 +84,7 @@ def train_model(base_model: str, output_dir: str, lora_rank: int):
         },
     )
 
+    logging.info("Creating text generation pipeline")
     pipe = pipeline(
         task="text-generation",
         model=model,
@@ -83,6 +93,7 @@ def train_model(base_model: str, output_dir: str, lora_rank: int):
         return_full_text=False,
     )
 
+    logging.info("Configuring LoRA")
     # XXX: we can add in the config  the targeted modules
     lora_cfg = LoraConfig(
         r=lora_rank,
@@ -103,9 +114,11 @@ def train_model(base_model: str, output_dir: str, lora_rank: int):
         # is_trainable=True
     )
 
+    logging.info("Preparing model for k-bit training and applying PEFT")
     model = prepare_model_for_kbit_training(model)
     model = get_peft_model(model, lora_cfg)
 
+    logging.info("Configuring SFTTrainer")
     sft_cfg = SFTConfig(
         output_dir=output_dir,
         dataset_text_field="text",
@@ -143,4 +156,6 @@ def train_model(base_model: str, output_dir: str, lora_rank: int):
         processing_class=tokenizer,
     )
 
+    logging.info("Starting training")
     trainer.train()
+    logging.info("Training finished")

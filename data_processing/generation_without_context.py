@@ -1,3 +1,9 @@
+import logging
+import openai
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 # NOTE: this will work great with ChatGPT, depending on the model, the prompt will need to change.
 SYSTEM_PROMPT = """
 You are a Content Analyst and a Q&A Data Generator. Your sole task is to analyze provided text chunks and generate a list of question-and-answer pairs based *only* on the information present in each chunk.
@@ -45,7 +51,7 @@ Your primary objective is to create a high-quality dataset for a knowledge base,
 """
 
 
-def getSystemPrompt(chunk: str, topic: str) -> str:
+def get_system_prompt(chunk: str, topic: str) -> str:
     """
     Generates a system prompt by replacing placeholders in a predefined template.
 
@@ -56,7 +62,55 @@ def getSystemPrompt(chunk: str, topic: str) -> str:
     Returns:
         str: The system prompt string with the placeholders replaced by the provided chunk and topic.
     """
+    logging.info(f"Generating system prompt for topic: {topic}")
     prompt = SYSTEM_PROMPT
     prompt = prompt.replace("@@CHUNKED_TEXT@@", chunk)
     prompt = prompt.replace("@@TOPIC_OF_EMPHASIS@@", topic)
     return prompt
+
+
+def get_openai_completion(
+    client: openai.Client,
+    chunk: str,
+    topic: str,
+    model: str = "gpt-3.5-turbo",
+    temperature: float = 0.7,
+    max_tokens: int = 150,
+) -> str:
+    """
+    Connects to the OpenAI LLM API, sends a prompt, and returns the generated text.
+
+    Args:
+        prompt (str): The text prompt to send to the model.
+        model (str): The name of the model to use (e.g., "gpt-3.5-turbo", "gpt-4o").
+        temperature (float): Controls the randomness of the output. Higher values
+                             (e.g., 0.8) make the output more random, while lower
+                             values (e.g., 0.2) make it more focused and deterministic.
+        max_tokens (int): The maximum number of tokens (words/characters) in the
+                          generated response.
+
+    Returns:
+        str: The generated text from the LLM, or an error message if the API call fails.
+    """
+    logging.info(f"Getting OpenAI completion with model: {model}")
+    prompt = get_system_prompt(chunk, topic)
+
+    try:
+        # Call the chat completions API
+        response = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+        # Check if the response is valid and return the content
+        if response.choices and response.choices[0].message:
+            logging.info("Successfully received response from OpenAI API.")
+            return response.choices[0].message.content.strip()  # type: ignore
+        else:
+            logging.error("Error: Empty or invalid response from the API.")
+            raise Exception("Error: Empty or invalid response from the API.")
+    except Exception as e:
+        logging.error(f"An error occurred during OpenAI API call: {e}")
+        raise e

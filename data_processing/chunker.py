@@ -1,4 +1,8 @@
+import logging
 from typing import List
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def chunk_text(text: str, chunk_size: int = 1000) -> List[str]:
@@ -13,7 +17,7 @@ def chunk_text(text: str, chunk_size: int = 1000) -> List[str]:
     Returns:
         List[str]: List of text chunks, with code blocks reserved as single chunks
     """
-
+    logging.info(f"Starting to chunk text of length {len(text)} with chunk size {chunk_size}")
     chunks = []
     chunk_start = 0
     text_length = len(text)
@@ -77,5 +81,5 @@ def chunk_text(text: str, chunk_size: int = 1000) -> List[str]:
 
         # update the chunk start
         chunk_start = max(chunk_start + 1, chunk_end)
-
+    logging.info(f"Finished chunking text. Total chunks: {len(chunks)}")
     return chunks

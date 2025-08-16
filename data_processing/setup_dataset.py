@@ -1,3 +1,4 @@
+import logging
 from textwrap import dedent
 from typing import Dict
 
@@ -9,6 +10,9 @@ from transformers import (
     AutoTokenizer,
     BitsAndBytesConfig,
 )
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 SEED = 42
 HF_TOKEN = ""
@@ -23,11 +27,13 @@ def setup_dataset(data_file: str, model_name: str):
         data_file (str): The path to the JSON dataset file.
         model_name (str): The name of the pre-trained model to use.
     """
+    logging.info(f"Setting up dataset from {data_file} with model {model_name}")
 
     quant_cfg = BitsAndBytesConfig(
         load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16
     )
 
+    logging.info("Loading tokenizer and model")
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True, token=HF_TOKEN)
     tokenizer.add_special_tokens({"pad_token": PAD_TOKEN})
     tokenizer.padding_side = "right"
@@ -43,6 +49,7 @@ def setup_dataset(data_file: str, model_name: str):
 
     model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
 
+    logging.info("Loading and processing dataset")
     df = pd.read_json(data_file)
 
     def format_example(row: Dict):
@@ -78,9 +85,12 @@ def setup_dataset(data_file: str, model_name: str):
     df["token_count"] = df.apply(count_tokens, axis=1)
 
     # NOTE: we can remove outliers here (140+ tokens for example) but since our data set is small, I will skip doing that for now.
+    logging.info("Splitting dataset into train, validation, and test sets")
     train, tmp = train_test_split(df, test_size=0.2, random_state=SEED)
     val, test = train_test_split(tmp, test_size=0.2, random_state=SEED)
 
+    logging.info("Saving datasets to JSON files")
     train.to_json("data/train.json", orient="records", lines=True)  # type: ignore
     val.to_json("data/val.json", orient="records", lines=True)  # type: ignore
     test.to_json("data/test.json", orient="records", lines=True)  # type: ignore
+    logging.info("Dataset setup complete.")

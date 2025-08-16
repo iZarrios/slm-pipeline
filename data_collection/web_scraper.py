@@ -24,13 +24,15 @@ Suggestions for improvement:
 - Add checkpointing so interrupted runs can resume without re-scraping.
 - Respect robots.txt and set concurrency limits to avoid overloading targets.
 """
-
-import random
+import logging
 import time
 from typing import TypedDict, Union
 
 import requests
 from bs4 import BeautifulSoup
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class SuccessResult(TypedDict):
@@ -54,7 +56,7 @@ def scrape_with_attribution(url: str) -> Union[SuccessResult, ErrorResult]:
         Union[SuccessResult, ErrorResult]: A dictionary containing the scraped text and source URL
             on success, or an error message and source URL on failure.
     """
-
+    logging.info(f"Scraping URL: {url}")
     # many websites block requests from scripts that don't look like a real browser. Adding a User-Agent header to requests call can help avoid being blocked.
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -68,6 +70,8 @@ def scrape_with_attribution(url: str) -> Union[SuccessResult, ErrorResult]:
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         text = soup.get_text(separator="\n", strip=True)
+        logging.info(f"Successfully scraped URL: {url}")
         return {"text": text, "source": url}
     except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to scrape URL: {url} - {e}")
         return {"error": f"An error occurred: {e}", "source": url}
