@@ -1,6 +1,6 @@
 import logging
 from textwrap import dedent
-from typing import Dict, Any
+from typing import Any, Dict
 
 import torch
 from datasets import load_dataset
