@@ -1,0 +1,25 @@
+domain: "2025 Tesla Cybertruck"
+base_model: "meta-llama/Meta-Llama-3-8B-Instruct"
+data_sources:
+  urls:
+    - "https://www.arabwheels.ae/new-cars/tesla/cybertruck/specifications/"
+    - "https://www.caranddriver.com/tesla/cybertruck"
+    - "https://www.caranddriver.com/tesla/cybertruck/specs"
+    - "https://www.cardekho.com/cars/Tesla"
+    - "https://www.cars.com/research/tesla-cybertruck-2025/"
+    - "https://www.cars.usnews.com/cars-trucks/tesla/cybertruck/performance"
+    - "https://www.carwow.co.uk/tesla/news/8189/tesla-cybertruck-review-2025-driving-interior-range"
+    - "https://www.chicagoautoshow.com/vehicles-on-display/2025/tesla/cybertruck/"
+    - "https://www.consumerreports.org/cars/tesla/cybertruck/2025/overview/"
+    - "https://www.edmunds.com/tesla/cybertruck/2025/features-specs/"
+    - "https://www.en.wikipedia.org/wiki/Tesla_Cybertruck"
+    - "https://www.greencars.com/expert-insights/2025-tesla-cybertruck-road-test"
+    - "https://www.jdpower.com/cars/2025/tesla/cybertruck/trim"
+    - "https://www.saudiauto.com.sa/cars/2025-tesla-cybertruck-a-comprehensive-guide/"
+    - "https://www.supercars.net/blog/all-brands/tesla/tesla-current-models/"
+  pdfs:
+    - "data/raw/Owners_Manual.pdf"
+fine_tuning:
+  lora_rank: 16
+secret:
+  hf_token: "hf_BADC0FFEE"
